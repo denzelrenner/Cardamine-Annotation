@@ -19,7 +19,48 @@ This github page will explain how to replicate the GENESPACE analysis conducted 
 Yaml files
 
 ## Data Acquisition
+The Cardamine hirsuta assembly produced by Sanger is on NCBI so we can run the command below
 
+```bash
+#!/bin/bash
+
+#SBATCH --job-name=downloading_cardamine_hirsuta
+#SBATCH --partition=shortq
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=30
+#SBATCH --mem=24g
+#SBATCH --time=01:00:00
+#SBATCH --output=/path/to/Output/and/Error/dir/OnE/%x.out
+#SBATCH --error=/path/to/Output/and/Error/dir/OnE/%x.err
+
+#initialise conda
+source ~/anaconda3/etc/profile.d/conda.sh
+
+# activate conda env with ncbi datasets
+conda activate ncbi_datasets_env
+
+# define directory for output
+OUTPUTDIR=~/Cardamine_Annotation_Haplomes/Shared_Input_Data/NCBI_Data/Sanger_Hirsuta
+
+# create output directory if it does not exist already
+mkdir -p $OUTPUTDIR
+
+# move into output directory
+cd $OUTPUTDIR
+
+# download cardamine hirsuta dataset
+datasets download genome accession GCA_964212585.1 \
+	--include genome \
+	--filename Sanger_Hirsuta_dataset.zip
+
+# unzip
+unzip Sanger_Hirsuta_dataset.zip
+
+# deactivate conda env
+conda deactivate
+
+```
 
 # The analysis
 
