@@ -6,7 +6,8 @@ This github page will explain how to replicate the GENESPACE analysis conducted 
   - [Tool Version and Links](#tool-version-and-links)
   - [Tool Installation](#tool-installation)
   - [Data Acquisition](#data-acquisition)
-    -[Cardamine hirsuta (Sanger)](#cardamine-hirsuta-sanger)
+    
+    - [Cardamine hirsuta (Sanger)](#cardamine-hirsuta-sanger)
     
 + [Analysis](#the-analysis)
   
