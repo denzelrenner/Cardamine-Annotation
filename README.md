@@ -5,19 +5,22 @@ This github page will explain how to replicate the GENESPACE analysis conducted 
 + [Prerequisites](#prerequisites)
   - [Tool Version and Links](#tool-version-and-links)
   - [Tool Installation](#tool-installation)
- 
-+ [Analysis](#the-analysis)
   - [Data Acquisition](#data-acquisition)
+    
++ [Analysis](#the-analysis)
+  
 
 
 # Prerequisites
 
 ## Tool version and links
 
-
 ## Tool Installation
-
-# The analysis
 Yaml files
 
-Data Acquisition
+## Data Acquisition
+
+
+# The analysis
+
+
