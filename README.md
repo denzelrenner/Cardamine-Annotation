@@ -19,7 +19,7 @@ This github page will explain how to replicate the GENESPACE analysis conducted 
 Yaml files
 
 ## Data Acquisition
-The Cardamine hirsuta assembly produced by Sanger is on NCBI so we can run the command below
+The Cardamine hirsuta assembly produced by Sanger is hosted on NCBI. To download the assembly run the code below:
 
 ```bash
 #!/bin/bash
