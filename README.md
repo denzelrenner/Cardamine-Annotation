@@ -40,7 +40,7 @@ Haplome 2 for Cardamine amara was created by R.
 
 ```bash
 mkdir -p ~/Cardamine_Annotation_Haplomes/Haplome2/Input_Seqs
-cp /path/to/haplome1/assembly ~/Cardamine_Annotation_Haplomes/Haplome2/Input_Seqs/haplome2.fa
+cp /path/to/haplome2/assembly ~/Cardamine_Annotation_Haplomes/Haplome2/Input_Seqs/haplome2.fa
 ```
 
 ### Cardamine hirsuta (Sanger)
@@ -110,5 +110,73 @@ wget -O Chirsuta.pep.fa https://chi.mpipz.mpg.de/download/annotations/carhr38.aa
 wget -O Chirsuta.nucl.fa https://chi.mpipz.mpg.de/download/sequences/chi_v1.fa
 ```
 # The analysis
+
+## <ins>RepeatMasker/RepeatModeller<ins>
+
+```bash
+#!/bin/bash
+
+#SBATCH --job-name=running_repeatmodellermasker_haplomes_v1
+#SBATCH --partition=shortq
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=48
+#SBATCH --mem=40g
+#SBATCH --time=12:00:00
+#SBATCH --output=/path/to/output/and/error/directory/%x.out
+#SBATCH --error=/path/to/output/and/error/directory/%x.err
+
+#initialise conda
+source ~/anaconda3/etc/profile.d/conda.sh
+
+# activate Rmodel/mask env
+conda activate RModeller-Masker
+
+## ENTIRE HAPLOME 1
+# define directory for output and where input sequences can be found
+INPUTSEQ=~/Cardamine_Annotation_Haplomes/Haplome1/Input_Seqs/haplome1.fa
+OUTPUTDIR=~/Cardamine_Annotation_Haplomes/Haplome1/Output/RMasker
+
+# create output directory if it does not exist already
+mkdir -p $OUTPUTDIR
+
+# move into output directory
+cd $OUTPUTDIR
+
+# mask first haplome
+BuildDatabase -name haplome1_db $INPUTSEQ
+RepeatModeler -database haplome1_db -threads 48 -LTRStruct
+RepeatMasker -pa 48 -dir $OUTPUTDIR -lib haplome1_db-families.fa -xsmall $INPUTSEQ
+
+# chnage name to soft mask
+cp haplome1.fa.masked haplome1.softmasked.fa
+
+## ENTIRE HAPLOME 2
+# define directory for output and where input sequences can be found
+INPUTSEQ=~/Cardamine_Annotation_Haplomes/Haplome2/Input_Seqs/haplome2.fa
+OUTPUTDIR=~/Cardamine_Annotation_Haplomes/Haplome2/Output/RMasker
+
+# create output directory if it does not exist already
+mkdir -p $OUTPUTDIR
+
+# move into output directory
+cd $OUTPUTDIR
+
+# mask first haplome
+BuildDatabase -name haplome2_db $INPUTSEQ
+RepeatModeler -database haplome2_db -threads 48 -LTRStruct
+RepeatMasker -pa 48 -dir $OUTPUTDIR -lib haplome2_db-families.fa -xsmall $INPUTSEQ
+
+# chnage name to soft mask
+cp haplome2.fa.masked haplome2.softmasked.fa
+
+# deactivate conda env
+conda deactivate
+
+# get job id
+echo "The Job ID for this job is: $SLURM_JOB_ID"
+
+# script should take 12 hours at most with 40 cpus, and you will need at least 30 Gb of space
+```
 
 
