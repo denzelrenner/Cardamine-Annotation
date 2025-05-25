@@ -196,4 +196,118 @@ conda deactivate
 echo "The Job ID for this job is: $SLURM_JOB_ID"
 ```
 
+## GENESPACE
+
+```bash
+#!/bin/bash
+
+#SBATCH --job-name=genespace
+#SBATCH --partition=shortq
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=40
+#SBATCH --mem=50g
+#SBATCH --time=12:00:00
+#SBATCH --output=/path/to/output/and/error/directory/%x.out
+#SBATCH --error=/path/to/output/and/error/directory/%x.err
+
+# conda init, init?
+source ~/anaconda3/etc/profile.d/conda.sh
+
+# load conda env
+conda activate genespace4
+
+# make required directories for genespace
+#OutputDir=~/Cardamine_Annotation_Haplomes/Shared_Output_Data/Genespace_NoPairwise
+#GenespaceInputDataDir=~/Cardamine_Annotation_Haplomes/Shared_Output_Data/Genespace_NoPairwise/InputData
+#ScriptsDir=~/Cardamine_Annotation_Haplomes/Shared_Output_Data/Genespace_NoPairwise/Scripts
+
+OutputDir=~/Cardamine_Annotation_Haplomes/Shared_Output_Data/Genespace_Results/Genespace_Sanger_Amara
+GenespaceInputDataDir=~/Cardamine_Annotation_Haplomes/Shared_Output_Data/Genespace_Results/Genespace_Sanger_Amara/InputData
+ScriptsDir=~/Cardamine_Annotation_Haplomes/Shared_Output_Data/Genespace_Results/Genespace_Sanger_Amara/Scripts
+Haplome1DataDir=~/Cardamine_Annotation_Haplomes/Haplome1/Output/Braker
+Haplome2DataDir=~/Cardamine_Annotation_Haplomes/Haplome2/Output/Braker
+PlanckHirsutaDataDir=~/Cardamine_Annotation_Haplomes/Shared_Input_Data/MaxPlanck_Hirsuta
+SangerHirsutaDataDir=~/Cardamine_Annotation_Haplomes/Shared_Output_Data/Sanger_Hirsuta/Braker
+
+# make output dir
+mkdir -p $OutputDir
+
+# move into main output dir
+# make sub directories
+cd $OutputDir
+
+mkdir -p InputData
+
+# get input files
+cd $GenespaceInputDataDir
+
+# copy haplome1 and 2 proteins
+cp $Haplome1DataDir"/braker.aa" haplome1_braker.fa
+cp $Haplome2DataDir"/braker.aa" haplome2_braker.fa
+#cp $PlanckHirsutaDataDir"/Chirsuta.pep.fa" cardamine_hirsuta_planck.fa
+cp $SangerHirsutaDataDir"/braker.aa" cardamine_hirsuta_sanger.fa
+
+# copy gtfs to dir
+cp $Haplome1DataDir"/braker.gtf" haplome1_braker.gtf
+cp $Haplome2DataDir"/braker.gtf" haplome2_braker.gtf
+#cp $GlacuaDataDir1"/braker.gtf" cardamine_glacua_softmask_braker.gtf
+#cp $GlacuaDataDir2"/braker.gtf" cardamine_glacua_primaryassem_braker.gtf
+#cp $CEnshiensisDataDir"/Censhiensis.gff" cardamine_enshiensis.gff
+#cp $PlanckHirsutaDataDir"/Chirsuta.gff" cardamine_hirsuta_planck.gff
+cp $SangerHirsutaDataDir"/braker.gtf" cardamine_hirsuta_sanger.gtf
+
+# make bed file for max planck hirsuta
+# get all alternative transcripts, so we dont grep gene which just gives us the gene name
+#grep -P '\tmRNA\t' cardamine_hirsuta_planck.gff | grep 'Chr' > filtered_cardamine_hirsuta_planck.gff
+#python3 ~/Cardamine_Annotation_Haplomes/Scripts/Python_Scripts/convert_gff_to_bed.py --gff filtered_cardamine_hirsuta_planck.gff \
+#	-o cardamine_hirsuta_planck.bed --gene_index 0
+
+# create debris scaffold for hirsuta assembly
+python3 ~/Cardamine_Annotation_Haplomes/Scripts/Python_Scripts/create_debris_scaffolds.py \
+	--nucl ~/Cardamine_Annotation_Haplomes/Shared_Input_Data/NCBI_Data/Sanger_Hirsuta/ncbi_dataset/data/GCA_964212585.1/GCA_964212585.1_ddCarHirs1.hap1.1_genomic.fna \
+	--gff cardamine_hirsuta_sanger.gtf --chr 8 -o cardamine_hirsuta_sanger.gff -d ./ --sep _ --chr_prefix RL_ --debris RL_9 --rename
+
+# convert to bed
+grep -P '\ttranscript\t' haplome1_braker.gtf | awk '{print $1,$4,$5,$9}' > haplome1_braker.bed
+grep -P '\ttranscript\t' haplome2_braker.gtf | awk '{print $1,$4,$5,$9}' > haplome2_braker.bed
+grep -P '\ttranscript\t' cardamine_hirsuta_sanger.gff | awk '{print $1,$4,$5,$9}' > cardamine_hirsuta_sanger.bed
+
+# remove gtf files
+rm haplome1_braker.gtf
+rm haplome2_braker.gtf
+#rm cardamine_glacua_softmask_braker.gtf
+#rm cardamine_glacua_primaryassem_braker.gtf
+rm cardamine_hirsuta_sanger.gtf
+rm cardamine_hirsuta_sanger.gff
+#rm cardamine_enshiensis.gff
+#rm filtered_cardamine_enshiensis.gff
+#rm filtered_cardamine_hirsuta_planck.gff
+#rm cardamine_hirsuta_planck.gff
+
+# run python script to sort all this input data and create genespace scripts
+python3 ~/Cardamine_Annotation_Haplomes/Scripts/Python_Scripts/create_riparian_plots.py -od $OutputDir \
+	-id $GenespaceInputDataDir \
+	--reference cardamine_hirsuta_sanger
+
+# move into scripts dir
+cd $ScriptsDir
+
+# run script
+for file in *; do
+    echo $file
+    if [ -f $file ]; then
+        echo "Running ${file} .."
+	R -f $file
+    fi
+done
+
+# deactivate env
+conda deactivate
+
+# echo job id
+echo "The Job ID for this job is: $SLURM_JOB_ID"
+
+```
+
 
