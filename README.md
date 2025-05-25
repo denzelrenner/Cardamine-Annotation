@@ -19,6 +19,10 @@ This github page will explain how to replicate the GENESPACE analysis conducted 
 Yaml files
 
 ## Data Acquisition
+
+To run genespace we need protein fastas for Cardamine amara (Haplome 1), Cardamine amara (Haplome 2), Cardamine hirsuta (Sanger), Cardamine hirsuta (Max Planck).
+
+### Cardamine hirsuta (Sanger)
 The Cardamine hirsuta assembly produced by Sanger is hosted on NCBI. To download the assembly run the code below:
 
 ```bash
