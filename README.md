@@ -7,6 +7,7 @@ This github page will explain how to replicate the GENESPACE analysis conducted 
   - [Tool Installation](#tool-installation)
  
 + [Analysis](#the-analysis)
+  - [Data Acquisition](#data-acquisition)
 
 
 # Prerequisites
