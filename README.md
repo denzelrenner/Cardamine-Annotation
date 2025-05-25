@@ -2,6 +2,8 @@
 
 This github page will explain how to replicate the GENESPACE analysis conducted on the diploid Cardamine amara, and two other diploid Cardamine hirsuta assemblies.
 
+|Prerequisites|(#Prerequisites)
+
 [Data Acquisition](#part1---data-acquisition) 
 
 # Prerequisites
