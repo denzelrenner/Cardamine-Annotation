@@ -6,8 +6,11 @@ This github page will explain how to replicate the GENESPACE analysis conducted 
   - [Tool Version and Links](#tool-version-and-links)
   - [Tool Installation](#tool-installation)
   - [Data Acquisition](#data-acquisition)
-    
+ 
+    - [Cardamine amara (Haplome 1)](#cardamine-amara-haplome-1)
+    - [Cardamine amara (Haplome 2)](#cardamine-amara-haplome-2)
     - [Cardamine hirsuta (Sanger)](#cardamine-hirsuta-sanger)
+    - [Cardamine hirsuta (Max Planck)](#cardamine-hirsuta-max-planck)
     
 + [Analysis](#the-analysis)
   
@@ -23,6 +26,22 @@ Yaml files
 ## Data Acquisition
 
 To run genespace we need protein fastas for Cardamine amara (Haplome 1), Cardamine amara (Haplome 2), Cardamine hirsuta (Sanger), Cardamine hirsuta (Max Planck).
+
+### Cardamine amara (Haplome 1)
+Haplome 1 for Cardamine amara was created by R.
+
+```bash
+mkdir -p ~/Cardamine_Annotation_Haplomes/Haplome1/Input_Seqs
+cp /path/to/haplome1/assembly ~/Cardamine_Annotation_Haplomes/Haplome1/Input_Seqs/haplome1.fa
+```
+
+### Cardamine amara (Haplome 2)
+Haplome 2 for Cardamine amara was created by R.
+
+```bash
+mkdir -p ~/Cardamine_Annotation_Haplomes/Haplome2/Input_Seqs
+cp /path/to/haplome1/assembly ~/Cardamine_Annotation_Haplomes/Haplome2/Input_Seqs/haplome2.fa
+```
 
 ### Cardamine hirsuta (Sanger)
 The Cardamine hirsuta assembly produced by Sanger is hosted on NCBI. To download the assembly run the code below:
