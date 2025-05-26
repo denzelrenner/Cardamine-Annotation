@@ -195,6 +195,230 @@ conda deactivate
 # get job id
 echo "The Job ID for this job is: $SLURM_JOB_ID"
 ```
+## BRAKER
+
+We are not using RNA-seq data so BRAKER will default to running BRAKER2
+
+```bash
+#!/bin/bash
+
+#SBATCH --job-name=running_braker_entire_assemblies
+#SBATCH --partition=hmemq
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=40
+#SBATCH --mem=165g
+#SBATCH --time=48:00:00
+#SBATCH --output=/path/to/output/and/error/directory/%x.out
+#SBATCH --error=/path/to/output/and/error/directory/%x.err
+
+# load singularity
+module load singularity
+
+# set important variables
+BRAKER_INSTALL_DIR=~/BrakerInstall
+SHARED_DATA_DIR=~/Cardamine_Annotation_Haplomes/Shared_Input_Data
+
+## ENTIRE HAPLOME 1
+# set shared data, braker, input and output dirs
+GENOMESEQDIR=~/Cardamine_Annotation_Haplomes/Haplome1/Output/RMasker
+OUTPUTDIR=~/Cardamine_Annotation_Haplomes/Haplome1/Output/Braker
+
+# move into shared data dir
+cd $SHARED_DATA_DIR
+
+# get orthodb partition for plants
+if [ ! -f Viridiplantae.fa.gz ]; then
+    echo "File not found! Downloading..."
+    wget https://bioinf.uni-greifswald.de/bioinf/partitioned_odb11/Viridiplantae.fa.gz
+    gunzip Viridiplantae.fa.gz
+fi
+
+# move into directory with barker.sif file
+cd $BRAKER_INSTALL_DIR
+
+# set new variable for BRAKER SIF file location
+BRAKER_SIF=$PWD/braker3.sif
+
+# run braker3, below is the original code from the test3.sh script
+# Author: Katharina J. hoff
+# Contact: katharina.hoff@uni-greifswald.de
+# Date: Jan 12th 2023
+
+# Copy this script into the folder where you want to execute it, e.g.:
+# singularity exec -B $PWD:$PWD braker3.sif cp /opt/BRAKER/example/singularity-tests/test3.sh .
+# Then run "bash test3.sh".
+
+# Check whether braker3.sif is available
+
+if [[ -z "${BRAKER_SIF}" ]]; then
+    echo ""
+    echo "Variable BRAKER_SIF is undefined."
+    echo "First, build the sif-file with \"singularity build braker3.sif docker://teambraker/braker3:latest\""
+    echo ""
+    echo "After building, export the BRAKER_SIF environment variable on the host as follows:"
+    echo ""
+    echo "export BRAKER_SIF=\$PWD/braker3.sif"
+    echo ""
+    echo "You will have to modify the export statement if braker3.sif does not reside in \$PWD."
+    echo ""
+    exit 1
+fi
+
+# Check whether singularity exists
+
+if ! command -v singularity &> /dev/null
+then
+    echo "Singularity could not be found."
+    echo "On some HPC systems you can load it with \"module load singularity\"."
+    echo "If that fails, please install singularity."
+    echo "Possibly you misunderstood how to run this script. Before running it, please copy it to the directory where you want to execute it by e.g.:"
+    echo "singularity exec -B \$PWD:\$PWD braker3.sif cp /opt/BRAKER/example/singularity-tests/test3.sh ."
+    echo "Then execute on the host with \"bash test3.sh\"".
+    exit 1
+fi
+
+# remove output directory if it already exists
+#    - viridiplantae_odb12
+#                - brassicales_odb12
+
+# output directory set previously is the wording directory. If already exists it is replaced, otherwise it is ren
+wd=$OUTPUTDIR
+
+if [ -d $wd ]; then
+    rm -r $wd
+fi
+
+singularity exec -B ${PWD}:${PWD} ${BRAKER_SIF} braker.pl --genome=$GENOMESEQDIR/haplome1.softmasked.fa \
+		--prot_seq $SHARED_DATA_DIR/Viridiplantae.fa --workingdir=${wd} \
+		--species=Cardamine_Haplome1_Ver1 \
+		--threads 40 --busco_lineage brassicales_odb10 &> brakerrun.log
+
+
+
+
+
+## ENTIRE HAPLOME 2
+# reset input and output dirs
+GENOMESEQDIR=~/Cardamine_Annotation_Haplomes/Haplome2/Output/RMasker
+OUTPUTDIR=~/Cardamine_Annotation_Haplomes/Haplome2/Output/Braker
+
+# run braker3, below is the original code from the test3.sh script
+# Author: Katharina J. hoff
+# Contact: katharina.hoff@uni-greifswald.de
+# Date: Jan 12th 2023
+
+# Copy this script into the folder where you want to execute it, e.g.:
+# singularity exec -B $PWD:$PWD braker3.sif cp /opt/BRAKER/example/singularity-tests/test3.sh .
+# Then run "bash test3.sh".
+
+# Check whether braker3.sif is available
+
+if [[ -z "${BRAKER_SIF}" ]]; then
+    echo ""
+    echo "Variable BRAKER_SIF is undefined."
+    echo "First, build the sif-file with \"singularity build braker3.sif docker://teambraker/braker3:latest\""
+    echo ""
+    echo "After building, export the BRAKER_SIF environment variable on the host as follows:"
+    echo ""
+    echo "export BRAKER_SIF=\$PWD/braker3.sif"
+    echo ""
+    echo "You will have to modify the export statement if braker3.sif does not reside in \$PWD."
+    echo ""
+    exit 1
+fi
+
+# Check whether singularity exists
+
+if ! command -v singularity &> /dev/null
+then
+    echo "Singularity could not be found."
+    echo "On some HPC systems you can load it with \"module load singularity\"."
+    echo "If that fails, please install singularity."
+    echo "Possibly you misunderstood how to run this script. Before running it, please copy it to the directory where you want to execute it by e.g.:"
+    echo "singularity exec -B \$PWD:\$PWD braker3.sif cp /opt/BRAKER/example/singularity-tests/test3.sh ."
+    echo "Then execute on the host with \"bash test3.sh\"".
+    exit 1
+fi
+
+# remove output directory if it already exists
+#    - viridiplantae_odb12                - brassicales_odb12
+
+# output directory set previously is the wording directory. If already exists it is replaced, otherwise it is ren
+wd=$OUTPUTDIR
+
+if [ -d $wd ]; then
+    rm -r $wd
+fi
+
+singularity exec -B ${PWD}:${PWD} ${BRAKER_SIF} braker.pl --genome=$GENOMESEQDIR/haplome2.softmasked.fa \
+                --prot_seq $SHARED_DATA_DIR/Viridiplantae.fa --workingdir=${wd} \
+		--species=Cardamine_Haplome2_Ver1 \
+		--threads 40 --busco_lineage brassicales_odb10 &> brakerrun.log
+
+
+
+## Sanger Hirsuta
+# reset input and output dirs
+GENOMESEQDIR=~/Cardamine_Annotation_Haplomes/Shared_Output_Data/Sanger_Hirusta/RMasker
+OUTPUTDIR=~/Cardamine_Annotation_Haplomes/Shared_Output_Data/Sanger_Hirusta/Braker
+
+# run braker3, below is the original code from the test3.sh script
+# Author: Katharina J. hoff
+# Contact: katharina.hoff@uni-greifswald.de
+# Date: Jan 12th 2023
+
+# Copy this script into the folder where you want to execute it, e.g.:
+# singularity exec -B $PWD:$PWD braker3.sif cp /opt/BRAKER/example/singularity-tests/test3.sh .
+# Then run "bash test3.sh".
+
+# Check whether braker3.sif is available
+
+if [[ -z "${BRAKER_SIF}" ]]; then
+    echo ""
+    echo "Variable BRAKER_SIF is undefined."
+    echo "First, build the sif-file with \"singularity build braker3.sif docker://teambraker/braker3:latest\""
+    echo ""
+    echo "After building, export the BRAKER_SIF environment variable on the host as follows:"
+    echo ""
+    echo "export BRAKER_SIF=\$PWD/braker3.sif"
+    echo ""
+    echo "You will have to modify the export statement if braker3.sif does not reside in \$PWD."
+    echo ""
+    exit 1
+fi
+
+# Check whether singularity exists
+
+if ! command -v singularity &> /dev/null
+then
+    echo "Singularity could not be found."
+    echo "On some HPC systems you can load it with \"module load singularity\"."
+    echo "If that fails, please install singularity."
+    echo "Possibly you misunderstood how to run this script. Before running it, please copy it to the directory where you want to execute it by e.g.:"
+    echo "singularity exec -B \$PWD:\$PWD braker3.sif cp /opt/BRAKER/example/singularity-tests/test3.sh ."
+    echo "Then execute on the host with \"bash test3.sh\"".
+    exit 1
+fi
+
+# remove output directory if it already exists
+#    - viridiplantae_odb12                - brassicales_odb12
+
+# output directory set previously is the wording directory. If already exists it is replaced, otherwise it is ren
+wd=$OUTPUTDIR
+
+if [ -d $wd ]; then
+    rm -r $wd
+fi
+
+singularity exec -B ${PWD}:${PWD} ${BRAKER_SIF} braker.pl --genome=$GENOMESEQDIR/sanger_hirsuta_haplome1.softmasked.fa \
+		--prot_seq $SHARED_DATA_DIR/Viridiplantae.fa --workingdir=${wd} \
+		--species=Sanger_Hirsuta_Ver1 \
+		--threads 40 --busco_lineage brassicales_odb10 &> brakerrun.log
+
+# get job id
+echo "The Job ID for this job is: $SLURM_JOB_ID"
+```
 
 ## GENESPACE
 
