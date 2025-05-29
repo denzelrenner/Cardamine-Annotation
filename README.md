@@ -13,6 +13,9 @@ This github page will explain how to replicate the GENESPACE analysis conducted 
     - [Cardamine hirsuta (Max Planck)](#cardamine-hirsuta-max-planck)
     
 + [Analysis](#the-analysis)
+  - [RepeatModeller/Masker](#repeatmodellermasker)
+  - [BRAKER](#braker)
+  - [GENESPACE](#genespace)
   
 
 
@@ -195,7 +198,7 @@ conda deactivate
 # get job id
 echo "The Job ID for this job is: $SLURM_JOB_ID"
 ```
-## BRAKER
+## <ins>BRAKER<ins>
 
 We are not using RNA-seq data so BRAKER will default to running BRAKER2
 
@@ -420,7 +423,7 @@ singularity exec -B ${PWD}:${PWD} ${BRAKER_SIF} braker.pl --genome=$GENOMESEQDIR
 echo "The Job ID for this job is: $SLURM_JOB_ID"
 ```
 
-## GENESPACE
+## <ins>GENESPACE<ins>
 
 ```bash
 #!/bin/bash
