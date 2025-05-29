@@ -13,7 +13,7 @@ This github page will explain how to replicate the GENESPACE analysis conducted 
     - [Cardamine hirsuta (Max Planck)](#cardamine-hirsuta-max-planck)
     
 + [Analysis](#the-analysis)
-  - [RepeatModeller/Masker](#repeatmodellermasker)
+  - [RepeatModeller/Masker](#repeatmaskerrepeatmodeller)
   - [BRAKER](#braker)
   - [GENESPACE](#genespace)
   
