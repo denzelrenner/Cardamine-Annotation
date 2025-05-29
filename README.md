@@ -442,13 +442,8 @@ source ~/anaconda3/etc/profile.d/conda.sh
 conda activate genespace4
 
 # make required directories for genespace
-#OutputDir=~/Cardamine_Annotation_Haplomes/Shared_Output_Data/Genespace_NoPairwise
-#GenespaceInputDataDir=~/Cardamine_Annotation_Haplomes/Shared_Output_Data/Genespace_NoPairwise/InputData
-#ScriptsDir=~/Cardamine_Annotation_Haplomes/Shared_Output_Data/Genespace_NoPairwise/Scripts
-
-OutputDir=~/Cardamine_Annotation_Haplomes/Shared_Output_Data/Genespace_Results/Genespace_Sanger_Amara
-GenespaceInputDataDir=~/Cardamine_Annotation_Haplomes/Shared_Output_Data/Genespace_Results/Genespace_Sanger_Amara/InputData
-ScriptsDir=~/Cardamine_Annotation_Haplomes/Shared_Output_Data/Genespace_Results/Genespace_Sanger_Amara/Scripts
+OutputDir=~/Cardamine_Annotation_Haplomes/Shared_Output_Data/Genespace_Results/Genespace_Amara_Vs_Hirsuta
+ScriptsDir=~/Cardamine_Annotation_Haplomes/Shared_Output_Data/Genespace_Results/Genespace_Amara_Vs_Hirsuta/Scripts
 Haplome1DataDir=~/Cardamine_Annotation_Haplomes/Haplome1/Output/Braker
 Haplome2DataDir=~/Cardamine_Annotation_Haplomes/Haplome2/Output/Braker
 PlanckHirsutaDataDir=~/Cardamine_Annotation_Haplomes/Shared_Input_Data/MaxPlanck_Hirsuta
@@ -460,59 +455,67 @@ mkdir -p $OutputDir
 # move into main output dir
 # make sub directories
 cd $OutputDir
-
 mkdir -p InputData
+cd InputData
 
-# get input files
-cd $GenespaceInputDataDir
+# set variable for genespace input dir, do not change this
+GenespaceInputDataDir=$OutputDir/InputData
 
-# copy haplome1 and 2 proteins
+# copy protein fasta files to input data directory
 cp $Haplome1DataDir"/braker.aa" haplome1_braker.fa
 cp $Haplome2DataDir"/braker.aa" haplome2_braker.fa
-#cp $PlanckHirsutaDataDir"/Chirsuta.pep.fa" cardamine_hirsuta_planck.fa
-cp $SangerHirsutaDataDir"/braker.aa" cardamine_hirsuta_sanger.fa
+cp $PlanckHirsutaDataDir"/Chirsuta.pep.fa" cardamine_hirsuta_planck.aa
+cp $SangerHirsutaDataDir"/braker.aa" cardamine_hirsuta_sanger.aa
 
-# copy gtfs to dir
+# copy gtfs to input data directory
 cp $Haplome1DataDir"/braker.gtf" haplome1_braker.gtf
 cp $Haplome2DataDir"/braker.gtf" haplome2_braker.gtf
-#cp $GlacuaDataDir1"/braker.gtf" cardamine_glacua_softmask_braker.gtf
-#cp $GlacuaDataDir2"/braker.gtf" cardamine_glacua_primaryassem_braker.gtf
-#cp $CEnshiensisDataDir"/Censhiensis.gff" cardamine_enshiensis.gff
-#cp $PlanckHirsutaDataDir"/Chirsuta.gff" cardamine_hirsuta_planck.gff
+cp $PlanckHirsutaDataDir"/Chirsuta.gff" cardamine_hirsuta_planck.gtf
 cp $SangerHirsutaDataDir"/braker.gtf" cardamine_hirsuta_sanger.gtf
 
-# make bed file for max planck hirsuta
-# get all alternative transcripts, so we dont grep gene which just gives us the gene name
-#grep -P '\tmRNA\t' cardamine_hirsuta_planck.gff | grep 'Chr' > filtered_cardamine_hirsuta_planck.gff
-#python3 ~/Cardamine_Annotation_Haplomes/Scripts/Python_Scripts/convert_gff_to_bed.py --gff filtered_cardamine_hirsuta_planck.gff \
-#	-o cardamine_hirsuta_planck.bed --gene_index 0
+# remove debris scaffolds and proteins found in debris from gff and protein fasta for planck assembly of Cardamine hirsuta
+python3 ~/Cardamine_Annotation_Haplomes/Scripts/Python_Scripts/remove_debris_scaffolds.py \
+        --nucl ~/Cardamine_Annotation_Haplomes/Shared_Input_Data/MaxPlanck_Hirsuta/Chirsuta.nucl.fa \
+        --gff cardamine_hirsuta_planck.gtf --chr 8 -o cardamine_hirsuta_planck \
+        -d ./ --sep _ --chr_prefix Chr --debris RL_9 --rename --prt cardamine_hirsuta_planck.aa --feature mRNA
 
-# create debris scaffold for hirsuta assembly
-python3 ~/Cardamine_Annotation_Haplomes/Scripts/Python_Scripts/create_debris_scaffolds.py \
+# remove debris scaffolds and proteins found in debris from gff and protein fasta for sanger assembly of Cardamine hirsuta
+python3 ~/Cardamine_Annotation_Haplomes/Scripts/Python_Scripts/remove_debris_scaffolds.py \
 	--nucl ~/Cardamine_Annotation_Haplomes/Shared_Input_Data/NCBI_Data/Sanger_Hirsuta/ncbi_dataset/data/GCA_964212585.1/GCA_964212585.1_ddCarHirs1.hap1.1_genomic.fna \
-	--gff cardamine_hirsuta_sanger.gtf --chr 8 -o cardamine_hirsuta_sanger.gff -d ./ --sep _ --chr_prefix RL_ --debris RL_9 --rename
+	--gff cardamine_hirsuta_sanger.gtf --chr 8 -o cardamine_hirsuta_sanger \
+	-d ./ --sep _ --chr_prefix Chr --debris RL_9 --rename --prt cardamine_hirsuta_sanger.aa
+
+# replace RL_ prefix with Chr
+sed -i 's/RL_/Chr/g' haplome1_braker.gtf
+sed -i 's/RL_/Chr/g' haplome2_braker.gtf
 
 # convert to bed
 grep -P '\ttranscript\t' haplome1_braker.gtf | awk '{print $1,$4,$5,$9}' > haplome1_braker.bed
 grep -P '\ttranscript\t' haplome2_braker.gtf | awk '{print $1,$4,$5,$9}' > haplome2_braker.bed
 grep -P '\ttranscript\t' cardamine_hirsuta_sanger.gff | awk '{print $1,$4,$5,$9}' > cardamine_hirsuta_sanger.bed
 
-# remove gtf files
+# filter gff for planck to only contain mRNA lines, then convert gff to a bed file
+grep -P '\tmRNA\t' cardamine_hirsuta_planck.gff > filtered_cardamine_hirsuta_planck.gff
+python3 ~/Cardamine_Annotation_Haplomes/Scripts/Python_Scripts/convert_gff_to_bed.py --gff filtered_cardamine_hirsuta_planck.gff \
+       -o cardamine_hirsuta_planck.bed --gene_index 0 --feature mRNA
+
+# remove any intermediate files
 rm haplome1_braker.gtf
 rm haplome2_braker.gtf
-#rm cardamine_glacua_softmask_braker.gtf
-#rm cardamine_glacua_primaryassem_braker.gtf
 rm cardamine_hirsuta_sanger.gtf
 rm cardamine_hirsuta_sanger.gff
-#rm cardamine_enshiensis.gff
-#rm filtered_cardamine_enshiensis.gff
-#rm filtered_cardamine_hirsuta_planck.gff
-#rm cardamine_hirsuta_planck.gff
+rm cardamine_hirsuta_sanger.aa
+rm cardamine_hirsuta_planck.gtf
+rm cardamine_hirsuta_planck.gff
+rm filtered_cardamine_hirsuta_planck.gff
+rm cardamine_hirsuta_planck.aa
 
 # run python script to sort all this input data and create genespace scripts
 python3 ~/Cardamine_Annotation_Haplomes/Scripts/Python_Scripts/create_riparian_plots.py -od $OutputDir \
 	-id $GenespaceInputDataDir \
-	--reference cardamine_hirsuta_sanger
+	--reference haplome1_braker \
+	--threads 48 \
+	--bg_colour 'gray90'
 
 # move into scripts dir
 cd $ScriptsDir
@@ -531,7 +534,6 @@ conda deactivate
 
 # echo job id
 echo "The Job ID for this job is: $SLURM_JOB_ID"
-
 ```
 
 
