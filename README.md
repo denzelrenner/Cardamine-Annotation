@@ -545,8 +545,336 @@ echo "The Job ID for this job is: $SLURM_JOB_ID"
 ## <ins>Ribosomal DNA (rDNA)<ins>
 
 ### <ins>Barrnap<ins>
+Run barranp to predict the different rDNA loci in the assembly
+
+```bash
+#!/bin/bash
+
+#SBATCH --job-name=running_barnap_entirehaplome_v1
+#SBATCH --partition=shortq
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=30
+#SBATCH --mem=20g
+#SBATCH --time=01:00:00
+#SBATCH --output=/path/to/output/and/error/%x.out
+#SBATCH --error=/path/to/output/and/error/%x.err
+
+#initialise conda
+source ~/anaconda3/etc/profile.d/conda.sh
+
+conda activate barnap_env
+
+# ENTIRE HAPLOME 1
+# define directory for output and where input sequences can be found
+INPUTSEQ=~/Cardamine_Annotation_Haplomes/Haplome1/Input_Seqs/haplome1.fa
+OUTPUTDIR=~/Cardamine_Annotation_Haplomes/Haplome1/Output/Barrnap
+
+# create output directory if it does not exist already
+mkdir -p $OUTPUTDIR
+
+# move into output directory
+cd $OUTPUTDIR
+
+# run barrnap
+barrnap --threads 30 \
+	--kingdom euk \
+	--outseq all_hits.fa \
+	$INPUTSEQ > RNA.gff
+
+
+# Entire HAPLOME 2
+# define directory for output and where input sequences can be found
+INPUTSEQ=~/Cardamine_Annotation_Haplomes/Haplome2/Input_Seqs/haplome2.fa
+OUTPUTDIR=~/Cardamine_Annotation_Haplomes/Haplome2/Output/Barrnap
+
+# create output directory if it does not exist already
+mkdir -p $OUTPUTDIR
+
+# move into output directory
+cd $OUTPUTDIR
+
+# run barrnap
+barrnap --threads 30 \
+        --kingdom euk \
+        --outseq all_hits.fa \
+        $INPUTSEQ > RNA.gff
+
+# deactivate conda
+conda deactivate
+
+# get job id
+echo "The Job ID for this job is: $SLURM_JOB_ID"
+```
+
+### <ins>SummaryStatistics<ins>
+
+```bash
+#!/bin/bash
+
+#initialise conda
+source ~/anaconda3/etc/profile.d/conda.sh
+
+# activate environment with pandas
+conda activate pandas_env
+
+# for scripts below give:
+# 1) Assembly fasta
+# 2) Fasta file from Barrnap
+# 3) NOR start and end coordinates
+# 4) Output directory and prefix for output files
+
+python3 create_rdna_summary_statistics.py \
+	--fasta /path/to/lydir/for_denzel/Cardamine_Annotation_Haplomes/Haplome1/Input_Seqs/haplome1.fa \
+	--barrnap /path/to/lydir/for_denzel/Cardamine_Annotation_Haplomes/Haplome1/Output/Barrnap/all_hits.fa \
+	-o xx \
+	--NOR_start 24700046 \
+	--NOR_end 32405984 \
+	-od ~/Hap1RDNA
+
+
+
+python3 create_rdna_summary_statistics.py \
+        --fasta /path/to/lydir/for_denzel/Cardamine_Annotation_Haplomes/Haplome2_Flipped/Input_Seqs/haplome2.fa \
+        --barrnap /path/to/lydir/for_denzel/Cardamine_Annotation_Haplomes/Haplome2_Flipped/Output/Barrnap/all_hits.fa \
+        -o xx \
+        --NOR_start 24541219 \
+        --NOR_end 34922022 \
+        -od ~/Hap2RDNA
+
+```
 
 
 ### <ins>Gfastats<ins>
+
+Multiple steps, first gfastats, next prepping data for igv
+
+```bash
+#!/bin/bash
+
+#SBATCH --job-name=running_gfastats3
+#SBATCH --partition=shortq
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=30
+#SBATCH --mem=30g
+#SBATCH --time=02:00:00
+#SBATCH --output=/path/to/output/and/error/%x.out
+#SBATCH --error=/path/to/output/and/error/%x.err
+
+# load bedtools module
+module load bedtools-uoneasy
+
+#initialise conda
+source ~/anaconda3/etc/profile.d/conda.sh
+
+# ENTIRE HAPLOME 1
+# define directory for output and where input sequences can be found
+InputSeq=~/Cardamine_Annotation_Haplomes_NOR/Haplome1/Input_Seqs/haplome1.fa
+OutputDir=~/Final_Results2/Haplome1/Output/GFAstats
+
+# create output directory if it does not exist already
+mkdir -p $OutputDir
+
+# move into output directory
+cd $OutputDir
+
+# activate samtools and grep out the NOR
+conda activate samtools_env
+
+samtools faidx $InputSeq RL_1:24700046-32405984 > NOR.fa
+
+# deactivate
+conda deactivate
+
+# activate gfastats
+conda activate gfastats_env
+
+# get general NOR stats
+gfastats -f NOR.fa -j 30 > stats.txt
+
+# get contig bed file
+gfastats -f NOR.fa -j 30 -b c > contigs.bed
+
+# get scaffold bed file
+gfastats -f NOR.fa -j 30 -b s > scaffold.bed
+
+# get gaps bed file
+gfastats -f NOR.fa -j 30 -b g > gaps.bed
+
+# deacitvate conda env
+conda deactivate
+
+# sense check by extracting contigs/gaps from NOR
+bedtools getfasta -fo NOR_contigs.fa -fi NOR.fa -bed contigs.bed
+
+bedtools getfasta -fo NOR_gaps.fa -fi NOR.fa -bed gaps.bed
+
+# activate pandas env
+conda activate pandas_env
+
+# rename headers in fasta files
+python3 ~/Cardamine_Annotation_Haplomes_NOR/Scripts/Python_Scripts/enumerate_fasta_headers.py --fa NOR_contigs.fa \
+	--pre contig_ \
+	-o NOR_contigs_enumerated.fa
+
+# deactivate
+conda deactivate
+
+# run barrnap on enumerated contigs
+conda activate barnap_env
+
+# redefine variables
+InputSeq=~/Final_Results2/Haplome1/Output/GFAstats/NOR_contigs_enumerated.fa
+OutputDir=~/Final_Results2/Haplome1/Output/GFAstats/Barrnap
+
+# create output directory if it does not exist already
+mkdir -p $OutputDir
+
+# move into output directory
+cd $OutputDir
+
+# run barrnap
+barrnap --threads 30 \
+	--kingdom euk \
+	--outseq all_hits.fa \
+	$InputSeq > RNA.gff
+
+# ENTIRE HAPLOME 2
+# define directory for output and where input sequences can be found
+InputSeq=~/Cardamine_Annotation_Haplomes_NOR/Haplome2_Flipped/Input_Seqs/haplome2.fa
+OutputDir=~/Final_Results2/Haplome2/Output/GFAstats
+
+# create output directory if it does not exist already
+mkdir -p $OutputDir
+
+# move into output directory
+cd $OutputDir
+
+# activate samtools and grep out the NOR
+conda activate samtools_env
+
+samtools faidx $InputSeq RL_1:24541219-34922022 > NOR.fa
+
+# deactivate
+conda deactivate
+
+# activate gfastats
+conda activate gfastats_env
+
+# get general NOR stats
+gfastats -f NOR.fa -j 30 > stats.txt
+
+# get contig bed file
+gfastats -f NOR.fa -j 30 -b c > contigs.bed
+
+# get scaffold bed file
+gfastats -f NOR.fa -j 30 -b s > scaffold.bed
+
+# get gaps bed file
+gfastats -f NOR.fa -j 30 -b g > gaps.bed
+
+# deacitvate conda env
+conda deactivate
+
+# sense check by extracting contigs/gaps from NOR
+bedtools getfasta -fo NOR_contigs.fa -fi NOR.fa -bed contigs.bed
+
+bedtools getfasta -fo NOR_gaps.fa -fi NOR.fa -bed gaps.bed
+
+# activate pandas env
+conda activate pandas_env
+
+# rename headers in fasta files
+python3 ~/Cardamine_Annotation_Haplomes_NOR/Scripts/Python_Scripts/enumerate_fasta_headers.py --fa NOR_contigs.fa \
+	--pre contig_ \
+	-o NOR_contigs_enumerated.fa
+
+# deactivate
+conda deactivate
+
+# run barrnap on enumerated contigs
+conda activate barnap_env
+
+# redefine variables
+InputSeq=~/Final_Results2/Haplome2/Output/GFAstats/NOR_contigs_enumerated.fa
+OutputDir=~/Final_Results2/Haplome2/Output/GFAstats/Barrnap
+
+# create output directory if it does not exist already
+mkdir -p $OutputDir
+
+# move into output directory
+cd $OutputDir
+
+# run barrnap
+barrnap --threads 30 \
+	--kingdom euk \
+	--outseq all_hits.fa \
+	$InputSeq > RNA.gff
+
+# deactivate env
+conda deactivate
+
+# get job id
+echo "The Job ID for this job is: $SLURM_JOB_ID"
+
+```
+
+now prep data for igv
+
+```bash
+#!/bin/bash
+
+#initialise conda
+source ~/anaconda3/etc/profile.d/conda.sh
+
+# ENTIRE HAPLOME 1
+# define directory for output and where input sequences can be found
+InputDir=~/Final_Results/Haplome1/Output/GFAstats
+BarrnapDir=~/Final_Results/Haplome1/Output/GFAstats/Barrnap
+LargestContig='contig_6'
+OutputDir=~/Final_Results/Haplome1/Output/GFAstats/$LargestContig
+
+# create output directory if it does not exist already
+mkdir -p $OutputDir
+
+# move into output directory
+cd $OutputDir
+
+# extract largest contig from multi fasta
+grep -w -A 1 $LargestContig $InputDir/NOR_contigs_enumerated.fa > $LargestContig.fa
+
+# extract gff results for largest contig
+grep -w $LargestContig $BarrnapDir/RNA.gff > $LargestContig.gff3
+
+python3 ~/prepare_gff_for_IGV.py \
+	-o $LargestContig"_wRGB" \
+	--gff $LargestContig.gff3
+
+# ENTIRE HAPLOME 2
+# define directory for output and where input sequences can be found
+InputDir=~/Final_Results/Haplome2/Output/GFAstats
+BarrnapDir=~/Final_Results/Haplome2/Output/GFAstats/Barrnap
+LargestContig='contig_3'
+OutputDir=~/Final_Results/Haplome2/Output/GFAstats/$LargestContig
+
+# create output directory if it does not exist already
+mkdir -p $OutputDir
+
+# move into output directory
+cd $OutputDir
+
+# extract largest contig from multi fasta
+grep -w -A 1 $LargestContig $InputDir/NOR_contigs_enumerated.fa > $LargestContig.fa
+
+# extract gff results for largest contig
+grep -w $LargestContig $BarrnapDir/RNA.gff > $LargestContig.gff3
+
+python3 ~/prepare_gff_for_IGV.py \
+        -o $LargestContig"_wRGB" \
+        --gff $LargestContig.gff3 
+# get job id
+echo "The Job ID for this job is: $SLURM_JOB_ID"
+```
 
 
