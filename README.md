@@ -20,6 +20,7 @@ This github page will explain how to replicate the GENESPACE analysis conducted 
 
     - [Barranp](#barrnap)
     - [Gfastats](#gfastats)
+    - [IGV](#igv)
 
 
 # Prerequisites
@@ -822,6 +823,7 @@ echo "The Job ID for this job is: $SLURM_JOB_ID"
 
 now prep data for igv
 
+### <ins>IGV<ins>
 ```bash
 #!/bin/bash
 
