@@ -16,7 +16,10 @@ This github page will explain how to replicate the GENESPACE analysis conducted 
   - [RepeatMasker/RepeatModeller](#repeatmaskerrepeatmodeller)
   - [BRAKER](#braker)
   - [GENESPACE](#genespace)
-  
+  - [Ribosomal DNA (rDNA)](#ribosomal-dna-rdna)
+
+    - [Barranp](#barrnap)
+    - [Gfastats](#gfastats)
 
 
 # Prerequisites
@@ -538,5 +541,12 @@ conda deactivate
 # echo job id
 echo "The Job ID for this job is: $SLURM_JOB_ID"
 ```
+
+## <ins>Ribosomal DNA (rDNA)<ins>
+
+### <ins>Barrnap<ins>
+
+
+### <ins>Gfastats<ins>
 
 
