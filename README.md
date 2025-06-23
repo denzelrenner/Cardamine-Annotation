@@ -26,6 +26,17 @@ This github page will explain how to replicate the GENESPACE analysis conducted 
 # Prerequisites
 
 ## <ins>Tool version and links<ins>
+NCBI Datasets - v 17.1.0
+RepeatModeler version 2.0.6
+RepeatMasker version 4.1.7-p1
+BuildDatabase - 2.0.6
+Genesapce?
+barrnap 0.9
+Pandas Version: 2.2.3
+Bedtools Version:   v2.31.0
+samtools 1.13 (Using htslib 1.13)
+gfastats v1.3.10
+Python 3.12.7
 
 ## <ins>Tool Installation<ins>
 Yaml files
